@@ -1,9 +1,0 @@
-pcap: true
-
-bag: true
-
-bag_args: ""
-
-topics: ""
-
-pcap_args: ""
