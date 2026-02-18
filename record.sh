@@ -1,4 +1,4 @@
-$presete_filename="record.preset"
+$preset_filename="record.preset"
 # leggi il file preset
 
 # salva nelle variabili i contenuti del file
@@ -32,3 +32,27 @@ $pid_pcap
 
 
 # se viene premuto ctrl+c ferma le registrazioni
+
+stop_record(){
+    echo ""
+    echo "stoping recording..."
+    echo
+    if [[$pcap -eq 0 && kill $pid_bag 2>/dev/null]]; then
+        echo "bag stopped"
+    else
+        echo "bag proccess not found"
+    fi
+    echo
+
+    if [[$bag -eq 0 && kill $pid_pcap 2>/dev/null]]; then
+        echo "pcap stopped"
+    else
+        echo "pcap proccess not found"
+    fi
+    echo
+    exit
+}
+
+trap stop_record SIGINT
+
+wait
