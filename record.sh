@@ -82,3 +82,31 @@ fi
 
 
 # se viene premuto ctrl+c ferma le registrazioni
+
+stop_record(){
+    echo ""
+    echo "stoping recording..."
+    echo
+    if [ "$bag" -eq 0 ] && kill $pid_bag > /dev/null 2>&1; then
+        echo "bag stopped"
+    elif [ "$bag" -ne 0 ]; then
+        echo "bag recording not started"
+    else
+        echo "bag proccess not found"
+    fi
+    echo
+
+    if [ "$pcap" -eq 0 ] && kill $pid_pcap > /dev/null 2>&1; then
+        echo "pcap stopped"
+    elif [ "$pcap" -ne 0 ]; then
+        echo "pcap recording not started"
+    else
+        echo "pcap proccess not found"
+    fi
+    echo
+    exit
+}
+
+trap stop_record SIGINT
+
+wait
