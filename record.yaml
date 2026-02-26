@@ -2,8 +2,8 @@ pcap: true
 
 bag: true
 
-bag_args: djfeouwbvk
+bag_args: 
 
-topics: vrwv fvwvwev fgfwgfv
+topics: /imu/data
 
-pcap_args: dfwebwv ncownvowe ncowevbew
+pcap_args: 

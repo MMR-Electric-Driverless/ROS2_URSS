@@ -63,13 +63,13 @@ pid_pcap=""
 
 # tcpdump
 if [ "$pcap" -eq 0 ]; then 
-    tcpdump $pcap_args &> pcap.log &
+    tcpdump $pcap_args > pcap.log 2>&1 &
     pid_pcap=$! 
     echo "pid_pcap=$pid_pcap" 
 fi
 # ros2 bag record $bag_args --topics:$topics
 if [ "$bag" -eq 0 ]; then 
-    ros2 bag record $bag_args $topics &> bag.log &
+    ros2 bag record $bag_args $topics > bag.log 2>&1 &
     pid_bag=$! 
     echo "pid_bag=$pid_bag" 
 fi
