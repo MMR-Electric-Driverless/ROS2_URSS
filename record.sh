@@ -85,7 +85,7 @@ fi
 
 stop_record(){
     echo ""
-    echo "stoping recording..."
+    echo "stopping recording..."
     echo
     if [ "$bag" -eq 0 ] && kill $pid_bag > /dev/null 2>&1; then
         echo "bag stopped"
@@ -107,6 +107,6 @@ stop_record(){
     exit
 }
 
-trap stop_record SIGINT
+trap stop_record INT
 
 wait
