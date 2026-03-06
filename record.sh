@@ -2,11 +2,11 @@ preset_filename="record.yaml"
 
 
 ## RECORD YAML PARSING
-pcap_val=$(yaml-parser "$preset_filename" "pcap")
-bag_val=$(yaml-parser "$preset_filename" "bag")
-bag_args_val=$(yaml-parser "$preset_filename" "bag_args")
-topics_val=$(yaml-parser "$preset_filename" "topics")
-pcap_args_val=$(yaml-parser "$preset_filename" "pcap_args")
+pcap_val=$(./yaml-parser "$preset_filename" "pcap")
+bag_val=$(./yaml-parser "$preset_filename" "bag")
+bag_args_val=$(./yaml-parser "$preset_filename" "bag_args")
+topics_val=$(./yaml-parser "$preset_filename" "topics")
+pcap_args_val=$(./yaml-parser "$preset_filename" "pcap_args")
 
 pcap=1
 if [ "$pcap_val" = "true" ]; then
@@ -76,4 +76,26 @@ stop_record(){
 
 trap stop_record INT
 
-wait
+wait -n
+
+status=$?
+
+if [ "$pcap" -eq 0 ] && kill -0 $pid_pcap 2>/dev/null; then
+    if [ ! "$status" -eq 0 ]; then
+        echo "error: pcap terminated with code $status"
+    fi
+
+    if [ "$bag" -eq 0 ]; then
+        kill $pid_bag
+    fi
+fi
+
+if [ "$bag" -eq 0 ] && kill -0 $pid_bag 2>/dev/null; then
+    if [ ! "$status" -eq 0 ]; then
+        echo "error: bag record terminated with code $status"
+    fi
+
+    if [ "$pcap" -eq 0 ]; then
+        kill $pid_pcap
+    fi
+fi
