@@ -2,8 +2,12 @@ pcap: true
 
 bag: true
 
-bag_args: 
+bag_args: topics
 
 topics: /imu/data
 
 pcap_args: 
+
+pcap_name: tcpdump_TIMESTAMP.pcap
+
+bag_name: rosbag_TIMESTAMP
