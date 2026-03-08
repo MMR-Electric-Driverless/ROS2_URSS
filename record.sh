@@ -27,6 +27,9 @@ index=$(expr index "$pcap_args_grep_val" ": ")
 length=$(expr length "$pcap_args_grep_val")
 pcap_args_val=$(expr substr "$pcap_args_grep_val" $(($index+2)) $(($length-$index)))
 
+pcap_ofile_name_raw=$(./yaml-parser ${preset_filename} pcap_name | sed 's/\x1b\[[0-9;]*m//g')
+bag_ofile_name_raw=$(./yaml-parser ${preset_filename} bag_name | sed 's/\x1b\[[0-9;]*m//g')
+
 # VARIABILI
 # variabile bool che decide se il pcap verrà registrato
 pcap=1
@@ -54,36 +57,22 @@ pcap_args=$pcap_args_val
 topics=$topics_val
 
 
-# present time  stamp
+## PROCCESSING OUTPUT FILE NAMES
 timestamp=$(date -d "today" +"%Y_%m_%d-%H_%M_%S")
 
-# variable containing the pcap's raw output file name as is defined in the preset file
-pcap_ofile_name_raw=$(./yaml-parser ${preset_filename} pcap_name | sed 's/\x1b\[[0-9;]*m//g')
 
 if [ "$pcap_ofile_name_raw" = "null" ]; then
-    # file name is not set so the argument is an empty string
     pcap_ofile_name_arg=""
-
 else
-    # the proccessed name of the output file
     pcap_ofile_name=${pcap_ofile_name_raw/TIMESTAMP/$timestamp}
-
-    # the pcap's output file name as the argument to add to tcpdump
     pcap_ofile_name_arg="-w ${pcap_ofile_name}"
 fi
 
-# variable containing the bag's raw output file name as is defined in the preset file
-bag_ofile_name_raw=$(./yaml-parser ${preset_filename} bag_name | sed 's/\x1b\[[0-9;]*m//g')
 
 if [  "$bag_ofile_name_raw" = "null" ]; then
-    # file name is not set so the argument is an empty string
     bag_ofile_name_arg=""
-
 else
-    # the proccessed name of the output file
     bag_ofile_name=${bag_ofile_name_raw/TIMESTAMP/$timestamp}
-
-    # the bag's output file name as the argument to add to ros2 bag record
     bag_ofile_name_arg="-o "${bag_ofile_name}
 fi
 
