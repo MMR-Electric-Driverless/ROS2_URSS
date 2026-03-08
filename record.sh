@@ -27,8 +27,8 @@ index=$(expr index "$pcap_args_grep_val" ": ")
 length=$(expr length "$pcap_args_grep_val")
 pcap_args_val=$(expr substr "$pcap_args_grep_val" $(($index+2)) $(($length-$index)))
 
-pcap_ofile_name_raw=$(./yaml-parser ${preset_filename} pcap_name | sed 's/\x1b\[[0-9;]*m//g')
-bag_ofile_name_raw=$(./yaml-parser ${preset_filename} bag_name | sed 's/\x1b\[[0-9;]*m//g')
+pcap_ofile_name_raw=$(yaml-parser ${preset_filename} pcap_name | sed 's/\x1b\[[0-9;]*m//g')
+bag_ofile_name_raw=$(yaml-parser ${preset_filename} bag_name | sed 's/\x1b\[[0-9;]*m//g')
 
 # VARIABILI
 # variabile bool che decide se il pcap verrà registrato
