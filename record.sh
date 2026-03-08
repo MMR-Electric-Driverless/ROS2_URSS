@@ -1,4 +1,9 @@
-preset_filename="record.yaml"
+# COMMAND LINE PARSING
+if [ $# -ne 1 ]; then
+    echo "ERROR: wrong number of arguments"
+    exit
+fi
+preset_filename="$1"
 
 
 ## RECORD YAML PARSING
