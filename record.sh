@@ -3,6 +3,10 @@ if [ $# -ne 1 ]; then
     echo "ERROR: wrong number of arguments"
     exit
 fi
+if [ ! -f $1 ]; then
+    echo "file named '$1' not found"
+    exit
+fi
 preset_filename="$1"
 
 
