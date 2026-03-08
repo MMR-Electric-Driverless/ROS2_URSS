@@ -11,3 +11,5 @@ pcap_args:
 pcap_name: tcpdump_TIMESTAMP.pcap
 
 bag_name: rosbag_TIMESTAMP
+
+date_format: "%Y_%m_%d-%H_%M_%S"

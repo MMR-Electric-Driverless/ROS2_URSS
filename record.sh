@@ -30,6 +30,8 @@ pcap_args_val=$(expr substr "$pcap_args_grep_val" $(($index+2)) $(($length-$inde
 pcap_ofile_name_raw=$(yaml-parser ${preset_filename} pcap_name | sed 's/\x1b\[[0-9;]*m//g')
 bag_ofile_name_raw=$(yaml-parser ${preset_filename} bag_name | sed 's/\x1b\[[0-9;]*m//g')
 
+date_format=$(yaml-parser ${preset_filename} date_format | sed 's/\x1b\[[0-9;]*m//g')
+
 # VARIABILI
 # variabile bool che decide se il pcap verrà registrato
 pcap=1
@@ -58,7 +60,7 @@ topics=$topics_val
 
 
 ## PROCCESSING OUTPUT FILE NAMES
-timestamp=$(date -d "today" +"%Y_%m_%d-%H_%M_%S")
+timestamp=$(date -d "today" +"$date_format")
 
 
 if [ "$pcap_ofile_name_raw" = "null" ]; then
