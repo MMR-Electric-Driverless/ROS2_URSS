@@ -36,18 +36,38 @@ pcap_args=$pcap_args_val
 topics=$topics_val
 
 
+
+## PROCCESSING OUTPUT FILE NAMES
+timestamp=$(date -d "today" +"$date_format")
+
+
+if [ "$pcap_ofile_name_raw" = "null" ]; then
+    pcap_ofile_name_arg=""
+else
+    pcap_ofile_name=${pcap_ofile_name_raw/TIMESTAMP/$timestamp}
+    pcap_ofile_name_arg="-w ${pcap_ofile_name}"
+fi
+
+
+if [  "$bag_ofile_name_raw" = "null" ]; then
+    bag_ofile_name_arg=""
+else
+    bag_ofile_name=${bag_ofile_name_raw/TIMESTAMP/$timestamp}
+    bag_ofile_name_arg="-o "${bag_ofile_name}
+fi
+
 ## ROSBAG AND TCPDUMP PID
 pid_bag=""
 pid_pcap=""
 
 if [ "$pcap" -eq 0 ]; then 
-    tcpdump "$pcap_args" > pcap.log 2>&1 &
+    tcpdump $pcap_args $pcap_ofile_name_arg > pcap.log 2>&1 &
     pid_pcap=$! 
     echo "pid_pcap=$pid_pcap" 
 fi
 
 if [ "$bag" -eq 0 ]; then 
-    ros2 bag record "$bag_args" "$topics" > bag.log 2>&1 &
+    ros2 bag record $bag_args $topics $bag_ofile_name_arg > bag.log 2>&1 &
     pid_bag=$! 
     echo "pid_bag=$pid_bag" 
 fi
