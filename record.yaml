@@ -2,8 +2,8 @@ pcap: false
 
 bag: true
 
-bag_args: 14124
+bag_args: topics
 
-topics: /synced/imu/data
+topics: /imu/data
 
-pcap_args: 3234
+pcap_args: 

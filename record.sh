@@ -1,14 +1,17 @@
+#!/bin/bash
+
 preset_filename="record.yaml"
 
 
 ## RECORD YAML PARSING
-pcap_val=$(./yaml-parser "$preset_filename" "pcap")
-bag_val=$(./yaml-parser "$preset_filename" "bag")
-bag_args_val=$(./yaml-parser "$preset_filename" "bag_args")
-topics_val=$(./yaml-parser "$preset_filename" "topics")
-pcap_args_val=$(./yaml-parser "$preset_filename" "pcap_args")
+pcap_val=$(yaml-parser ${preset_filename} "pcap" | sed 's/\x1b[[0-9;]*m//g')
+bag_val=$(yaml-parser ${preset_filename} "bag" | sed 's/\x1b[[0-9;]*m//g')
+bag_args_val=$(yaml-parser ${preset_filename} "bag_args" | sed 's/\x1b[[0-9;]*m//g')
+topics_val=$(yaml-parser ${preset_filename} "topics" | sed 's/\x1b[[0-9;]*m//g')
+pcap_args_val=$(yaml-parser ${preset_filename} "pcap_args" | sed 's/\x1b[[0-9;]*m//g')
 
 pcap=1
+echo "$pcap_val" = "true"
 if [ "$pcap_val" = "true" ]; then
     pcap=0
 fi
@@ -20,11 +23,11 @@ if [ "$bag_val" = "true" ]; then
 fi
 
 ## DEBUG
-echo \"$pcap_val\" $pcap
-echo \"$bag_val\" $bag
-echo \"$bag_args_val\"
-echo \"$topics_val\"
-echo \"$pcap_args_val\"
+echo \""$pcap_val"\" $pcap
+echo \""$bag_val"\" $bag
+echo \""$bag_args_val"\"
+echo \""$topics_val"\"
+echo \""$pcap_args_val"\"
 
 bag_args=$bag_args_val
 
@@ -38,13 +41,13 @@ pid_bag=""
 pid_pcap=""
 
 if [ "$pcap" -eq 0 ]; then 
-    tcpdump $pcap_args > pcap.log 2>&1 &
+    tcpdump "$pcap_args" > pcap.log 2>&1 &
     pid_pcap=$! 
     echo "pid_pcap=$pid_pcap" 
 fi
 
 if [ "$bag" -eq 0 ]; then 
-    ros2 bag record $bag_args $topics > bag.log 2>&1 &
+    ros2 bag record "$bag_args" "$topics" > bag.log 2>&1 &
     pid_bag=$! 
     echo "pid_bag=$pid_bag" 
 fi
@@ -76,6 +79,7 @@ stop_record(){
 
 trap stop_record INT
 
+## CHECK IF AT LEAST ONE PROCESS HAS STOPPED EXECUTING AND CHECK ITS EXIT CODE. TERMINATE THE OTHER IF NECESSARY.
 wait -n
 
 status=$?
