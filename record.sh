@@ -15,7 +15,6 @@ bag_ofile_name_raw=$(yaml-parser ${preset_filename} bag_name | sed 's/\x1b[[0-9;
 date_format=$(yaml-parser ${preset_filename} date_format | sed 's/\x1b[[0-9;]*m//g')
 
 pcap=1
-echo "$pcap_val" = "true"
 if [ "$pcap_val" = "true" ]; then
     pcap=0
 fi
@@ -26,19 +25,19 @@ if [ "$bag_val" = "true" ]; then
     bag=0
 fi
 
+bag_args=$bag_args_val
+
+pcap_args=$pcap_args_val
+
+topics=$topics_val
+
+
 ## DEBUG
 # echo \""$pcap_val"\" $pcap
 # echo \""$bag_val"\" $bag
 # echo \""$bag_args_val"\"
 # echo \""$topics_val"\"
 # echo \""$pcap_args_val"\"
-
-# bag_args=$bag_args_val
-
-# pcap_args=$pcap_args_val
-
-# topics=$topics_val
-
 
 
 ## PROCESSING OUTPUT FILE NAMES
