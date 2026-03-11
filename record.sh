@@ -2,17 +2,29 @@
 
 preset_filename="record.yaml"
 
+if_null_then_empty_string(){
+    if [ "$1" == "null" ]; then
+        echo ""
+    else
+        echo "$1"
+    fi
+}
+
+parse_yaml(){
+    val=$(yaml-parser ${preset_filename} "$1" | sed 's/\x1b[[0-9;]*m//g')
+    val=$(if_null_then_empty_string "$val")
+    echo "$val"
+}
 
 ## RECORD YAML PARSING
-pcap_val=$(yaml-parser ${preset_filename} "pcap" | sed 's/\x1b[[0-9;]*m//g')
-bag_val=$(yaml-parser ${preset_filename} "bag" | sed 's/\x1b[[0-9;]*m//g')
-bag_args_val=$(yaml-parser ${preset_filename} "bag_args" | sed 's/\x1b[[0-9;]*m//g')
-topics_val=$(yaml-parser ${preset_filename} "topics" | sed 's/\x1b[[0-9;]*m//g')
-pcap_args_val=$(yaml-parser ${preset_filename} "pcap_args" | sed 's/\x1b[[0-9;]*m//g')
-pcap_ofile_name_raw=$(yaml-parser ${preset_filename} pcap_name | sed 's/\x1b[[0-9;]*m//g')
-bag_ofile_name_raw=$(yaml-parser ${preset_filename} bag_name | sed 's/\x1b[[0-9;]*m//g')
-
-date_format=$(yaml-parser ${preset_filename} date_format | sed 's/\x1b[[0-9;]*m//g')
+pcap_val=$(parse_yaml "pcap")
+bag_val=$(parse_yaml "bag")
+bag_args_val=$(parse_yaml "bag_args")
+topics_val=$(parse_yaml "topics")
+pcap_args_val=$(parse_yaml "pcap_args")
+pcap_ofile_name_raw=$(parse_yaml "pcap_name")
+bag_ofile_name_raw=$(parse_yaml "bag_name")
+date_format=$(parse_yaml "date_format")
 
 pcap=1
 if [ "$pcap_val" = "true" ]; then
