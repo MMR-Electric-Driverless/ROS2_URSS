@@ -1,9 +1,15 @@
-pcap: false
+pcap: true
 
 bag: true
 
-bag_args: 14124
+bag_args: topics
 
-topics: /synced/imu/data
+topics: /synced/imu/data /synced/lidar_imu
 
-pcap_args: 3234
+pcap_args: 
+
+pcap_name: tcpdump_TIMESTAMP.pcap
+
+bag_name: rosbag_TIMESTAMP
+
+date_format: "%Y_%m_%d-%H_%M_%S"

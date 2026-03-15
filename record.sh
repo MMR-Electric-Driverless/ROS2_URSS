@@ -1,12 +1,30 @@
+#!/bin/bash
+
 preset_filename="record.yaml"
 
+if_null_then_empty_string(){
+    if [ "$1" == "null" ]; then
+        echo ""
+    else
+        echo "$1"
+    fi
+}
+
+parse_yaml(){
+    val=$(yaml-parser ${preset_filename} "$1" | sed 's/\x1b[[0-9;]*m//g')
+    val=$(if_null_then_empty_string "$val")
+    echo "$val"
+}
 
 ## RECORD YAML PARSING
-pcap_val=$(./yaml-parser "$preset_filename" "pcap")
-bag_val=$(./yaml-parser "$preset_filename" "bag")
-bag_args_val=$(./yaml-parser "$preset_filename" "bag_args")
-topics_val=$(./yaml-parser "$preset_filename" "topics")
-pcap_args_val=$(./yaml-parser "$preset_filename" "pcap_args")
+pcap_val=$(parse_yaml "pcap")
+bag_val=$(parse_yaml "bag")
+bag_args_val=$(parse_yaml "bag_args")
+topics_val=$(parse_yaml "topics")
+pcap_args_val=$(parse_yaml "pcap_args")
+pcap_ofile_name_raw=$(parse_yaml "pcap_name")
+bag_ofile_name_raw=$(parse_yaml "bag_name")
+date_format=$(parse_yaml "date_format")
 
 pcap=1
 if [ "$pcap_val" = "true" ]; then
@@ -19,34 +37,54 @@ if [ "$bag_val" = "true" ]; then
     bag=0
 fi
 
-## DEBUG
-echo \"$pcap_val\" $pcap
-echo \"$bag_val\" $bag
-echo \"$bag_args_val\"
-echo \"$topics_val\"
-echo \"$pcap_args_val\"
-
 bag_args=$bag_args_val
 
 pcap_args=$pcap_args_val
 
-topics=$topics_val
+topics="topics "$topics_val
 
+
+## DEBUG
+# echo \""$pcap_val"\" $pcap
+# echo \""$bag_val"\" $bag
+# echo \""$bag_args_val"\"
+# echo \""$topics_val"\"
+# echo \""$pcap_args_val"\"
+
+
+## PROCESSING OUTPUT FILE NAMES
+timestamp=$(date -d "today" +"$date_format")
+
+
+if [ "$pcap_ofile_name_raw" = "null" ]; then
+    pcap_ofile_name_arg=""
+else
+    pcap_ofile_name=${pcap_ofile_name_raw/TIMESTAMP/$timestamp}
+    pcap_ofile_name_arg="-w ""$pcap_ofile_name"
+fi
+
+
+if [  "$bag_ofile_name_raw" = "null" ]; then
+    bag_ofile_name_arg=""
+else
+    bag_ofile_name=${bag_ofile_name_raw/TIMESTAMP/$timestamp}
+    bag_ofile_name_arg="-o ""$bag_ofile_name"
+fi
 
 ## ROSBAG AND TCPDUMP PID
 pid_bag=""
 pid_pcap=""
 
 if [ "$pcap" -eq 0 ]; then 
-    tcpdump $pcap_args > pcap.log 2>&1 &
+    tcpdump $pcap_args $pcap_ofile_name_arg > pcap.log 2>&1 &
     pid_pcap=$! 
-    echo "pid_pcap=$pid_pcap" 
+    echo "pid_pcap=""$pid_pcap" 
 fi
 
 if [ "$bag" -eq 0 ]; then 
-    ros2 bag record $bag_args $topics > bag.log 2>&1 &
+    ros2 bag record $bag_args $topics $bag_ofile_name_arg > bag.log 2>&1 &
     pid_bag=$! 
-    echo "pid_bag=$pid_bag" 
+    echo "pid_bag=""$pid_bag" 
 fi
 
 ## ROSBAG AND TCPDUMP PROCESSES KILLS
@@ -76,6 +114,7 @@ stop_record(){
 
 trap stop_record INT
 
+## CHECK IF AT LEAST ONE PROCESS HAS STOPPED EXECUTING AND CHECK ITS EXIT CODE. TERMINATE THE OTHER IF NECESSARY.
 wait -n
 
 status=$?
