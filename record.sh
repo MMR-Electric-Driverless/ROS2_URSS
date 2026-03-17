@@ -2,6 +2,20 @@
 
 preset_filename="record.yaml"
 
+# Yaml read function, gently borrowed by the following repository: https://github.com/PigneInTesta/yaml-parser . The main changes involve the formatting of
+# the parsed values, which now are not color coded.
+yaml_read(){
+    result1=$(awk -F ": " -v key="${2}" '{sub(/#.*/, "", $2); gsub(/^[ \t]+|[ \t]+$/, "", $2)} $1 == key {gsub(/"/, "", $2); print $2}' "${1}")
+    count1=$(awk -v key="^${2}:" '$0 ~ key {count++} END {if (count) print count; else print 0}' "${1}")
+    if [ "${count1}" -gt 1 ]; then
+      echo ""
+    elif [ -z "${result1}" ]; then
+      echo ""
+    else
+      echo "${result1}"
+    fi
+}
+
 if_null_then_empty_string(){
     if [ "$1" == "null" ]; then
         echo ""
@@ -11,9 +25,33 @@ if_null_then_empty_string(){
 }
 
 parse_yaml(){
-    val=$(yaml-parser ${preset_filename} "$1" | sed 's/\x1b[[0-9;]*m//g')
+    val=$(yaml_read ${preset_filename} "$1")
     val=$(if_null_then_empty_string "$val")
     echo "$val"
+}
+
+stop_record(){
+    echo ""
+    echo "stopping recording..."
+    echo
+    if [ "$bag" -eq 0 ] && kill $pid_bag > /dev/null 2>&1; then
+        echo "bag stopped"
+    elif [ "$bag" -ne 0 ]; then
+        echo "bag recording not started"
+    else
+        echo "bag proccess not found"
+    fi
+    echo
+
+    if [ "$pcap" -eq 0 ] && kill $pid_pcap > /dev/null 2>&1; then
+        echo "pcap stopped"
+    elif [ "$pcap" -ne 0 ]; then
+        echo "pcap recording not started"
+    else
+        echo "pcap proccess not found"
+    fi
+    echo
+    exit
 }
 
 ## RECORD YAML PARSING
@@ -88,29 +126,6 @@ if [ "$bag" -eq 0 ]; then
 fi
 
 ## ROSBAG AND TCPDUMP PROCESSES KILLS
-stop_record(){
-    echo ""
-    echo "stopping recording..."
-    echo
-    if [ "$bag" -eq 0 ] && kill $pid_bag > /dev/null 2>&1; then
-        echo "bag stopped"
-    elif [ "$bag" -ne 0 ]; then
-        echo "bag recording not started"
-    else
-        echo "bag proccess not found"
-    fi
-    echo
-
-    if [ "$pcap" -eq 0 ] && kill $pid_pcap > /dev/null 2>&1; then
-        echo "pcap stopped"
-    elif [ "$pcap" -ne 0 ]; then
-        echo "pcap recording not started"
-    else
-        echo "pcap proccess not found"
-    fi
-    echo
-    exit
-}
 
 trap stop_record INT
 
