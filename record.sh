@@ -98,13 +98,13 @@ if [ "$pcap" -eq 0 ]; then
     fi
     pid_pcap=${pids[0]}
 
-    echo "pid_pcap=""$pid_pcap"
+    echo pcap started with pid "$pid_pcap"
 fi
 
 if [ "$bag" -eq 0 ]; then 
     ros2 bag record $bag_args $topics $bag_ofile_name_arg > bag.log 2>&1 &
     pid_bag=$! 
-    echo "pid_bag=""$pid_bag" 
+    echo bag started with pid "$pid_bag"
 fi
 
 ## ROSBAG AND TCPDUMP PROCESSES KILLS
