@@ -149,11 +149,12 @@ trap stop_record INT
 
 ## CHECK IF AT LEAST ONE PROCESS HAS STOPPED EXECUTING AND CHECK ITS EXIT CODE. TERMINATE THE OTHER IF NECESSARY.
 tail --pid $pid_pcap -f /dev/null &
-wait -n
+wait -n -p exited_pid
 
 status=$?
 
-if [ "$pcap" -eq 0 ] && kill -0 $pid_pcap 2>/dev/null; then
+echo "error: proccess with pid $exited_pid terminated unexpectedly";
+if [ "$pcap" -eq 0 ] && [ "$pid_pcap" = "$exited_pid" ]; then
     if [ ! "$status" -eq 0 ]; then
         echo "error: pcap terminated with code $status"
     fi
@@ -163,7 +164,7 @@ if [ "$pcap" -eq 0 ] && kill -0 $pid_pcap 2>/dev/null; then
     fi
 fi
 
-if [ "$bag" -eq 0 ] && kill -0 $pid_bag 2>/dev/null; then
+if [ "$bag" -eq 0 ] && [ "$pid_bag" = "$exited_pid" ]; then
     if [ ! "$status" -eq 0 ]; then
         echo "error: bag record terminated with code $status"
     fi
