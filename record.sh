@@ -77,8 +77,7 @@ bag_args=$bag_args_val
 
 pcap_args=$pcap_args_val
 
-topics=$topics_val
-
+topics="topics "$topics_val
 
 ## DEBUG
 # echo \""$pcap_val"\" $pcap
