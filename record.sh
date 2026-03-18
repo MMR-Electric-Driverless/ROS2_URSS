@@ -85,7 +85,7 @@ topics=$topics_val
 timestamp=$(date -d "today" +"$date_format")
 
 
-if [ "$pcap_ofile_name_raw" = "null" ]; then
+if [ "$pcap_ofile_name_raw" = "" ]; then
     pcap_ofile_name_arg=""
 else
     pcap_ofile_name=${pcap_ofile_name_raw/TIMESTAMP/$timestamp}
@@ -93,7 +93,7 @@ else
 fi
 
 
-if [  "$bag_ofile_name_raw" = "null" ]; then
+if [  "$bag_ofile_name_raw" = "" ]; then
     bag_ofile_name_arg=""
 else
     bag_ofile_name=${bag_ofile_name_raw/TIMESTAMP/$timestamp}
