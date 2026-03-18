@@ -1,6 +1,6 @@
 # COMMAND LINE PARSING
 if [ $# -ne 1 ]; then
-    echo "ERROR: wrong number of arguments"
+    echo "error: wrong number of arguments"
     exit
 fi
 if [ ! -f $1 ]; then
@@ -145,10 +145,10 @@ if [ "$pcap" -eq 0 ]; then
 
     pids_size=${#pids[@]}
     if [ "$pids_size" -eq 0 ]; then
-        echo "error: no proccesss found"
+        echo "error: pcap did not started, maybe pcap got bad arguments, see pcap.log"
         exit
     elif [ "$pids_size" -gt 1 ]; then
-        echo "error: to many proccess"
+        echo "error: to many processes, cannot find pcap process, more processes have the same name"
         exit
     fi
     pid_pcap=${pids[0]}
