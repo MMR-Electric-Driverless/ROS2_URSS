@@ -1,6 +1,13 @@
-#!/bin/bash
-
-preset_filename="record.yaml"
+# COMMAND LINE PARSING
+if [ $# -ne 1 ]; then
+    echo "ERROR: wrong number of arguments"
+    exit
+fi
+if [ ! -f $1 ]; then
+    echo "file named '$1' not found"
+    exit
+fi
+preset_filename="$1"
 
 # Yaml read function, gently borrowed by the following repository: https://github.com/PigneInTesta/yaml-parser . The main changes involve the formatting of
 # the parsed values, which now are not color coded.
