@@ -16,17 +16,8 @@ yaml_read(){
     fi
 }
 
-if_null_then_empty_string(){
-    if [ "$1" == "null" ]; then
-        echo ""
-    else
-        echo "$1"
-    fi
-}
-
 parse_yaml(){
     val=$(yaml_read ${preset_filename} "$1")
-    val=$(if_null_then_empty_string "$val")
     echo "$val"
 }
 
