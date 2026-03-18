@@ -73,11 +73,19 @@ if [ "$bag_val" = "true" ]; then
     bag=0
 fi
 
+topics="topics "$topics_val
+if [ "$topics_val" = "" ]; then
+    topics=""
+fi
+if [[ "$bag_args_val" == *"topics"*  ]]; then
+    topics=""
+    echo "Illegal: specify topic list inside topics, not inside the bag_args"
+    exit 1
+fi
+
 bag_args=$bag_args_val
 
 pcap_args=$pcap_args_val
-
-topics="topics "$topics_val
 
 ## DEBUG
 # echo \""$pcap_val"\" $pcap
