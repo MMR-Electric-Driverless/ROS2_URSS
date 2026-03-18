@@ -135,6 +135,7 @@ stop_record(){
 trap stop_record INT
 
 ## CHECK IF AT LEAST ONE PROCESS HAS STOPPED EXECUTING AND CHECK ITS EXIT CODE. TERMINATE THE OTHER IF NECESSARY.
+tail --pid $pid_pcap -f /dev/null &
 wait -n
 
 status=$?
