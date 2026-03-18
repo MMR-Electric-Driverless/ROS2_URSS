@@ -83,6 +83,18 @@ if [[ "$bag_args_val" == *"topics"*  ]]; then
     exit 1
 fi
 
+if [[ "$bag_args_val" == *"-o "*  ]]; then
+    topics=""
+    echo "Illegal: specify bag output filename inside bag_name, not inside the bag_args"
+    exit 1
+fi
+
+if [[ "$pcap_args_val" == *"-w "*  ]]; then
+    topics=""
+    echo "Illegal: specify pcap output filename inside pcap_name, not inside the pcap_args"
+    exit 1
+fi
+
 bag_args=$bag_args_val
 
 pcap_args=$pcap_args_val
