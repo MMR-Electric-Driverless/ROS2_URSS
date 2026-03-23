@@ -132,17 +132,22 @@ pid_pcap=""
 
 if [ "$pcap" -eq 0 ]; then
     # important!!! keep tcpdump start before bag record, because of sudo not starting tcpdump until password is given
+    # create a dummy process to get its pid
     tail -f /dev/null &
-    pid_tail=$!
-
-    id_pcap="tcpdump""$pid_tail""$EPOCHREALTIME"
-
+    # pid of the created process needed to create a random unique number 
+    unique_number=$!
+    # the unique name of the tcpdump process
+    id_pcap="tcpdump""$unique_number""$EPOCHREALTIME"
+    # to give a custom name to a process exec will be used
+    # exec is a shell built-in so its not a executable
+    # sudo can be used with executables only
+    # so a bash is created with sudo to run the exec command to give a unique custom name to the tcpdump process
     sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> pcap.log"
-
+    # array of pids of found processes with that unique name
     pids=($(pgrep -f "^$id_pcap"))
-
-    kill $pid_tail > /dev/null
-
+    # the dummy process is no longer needed
+    kill $unique_number > /dev/null
+    # check if there isn't only one occurrence
     pids_size=${#pids[@]}
     if [ "$pids_size" -eq 0 ]; then
         echo "error: pcap did not started, maybe pcap got bad arguments, see pcap.log"
