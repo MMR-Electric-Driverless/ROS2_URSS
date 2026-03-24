@@ -2,7 +2,7 @@
 
 # COMMAND LINE PARSING
 if [ $# -ne 1 ]; then
-    echo "ERROR: wrong number of arguments"
+    echo "error: wrong number of arguments"
     exit
 fi
 if [ ! -f $1 ]; then
@@ -85,6 +85,18 @@ if [[ "$bag_args_val" == *"topics"*  ]]; then
     exit 1
 fi
 
+if [[ "$bag_args_val" == *"-o "*  ]]; then
+    topics=""
+    echo "Illegal: specify bag output filename inside bag_name, not inside the bag_args"
+    exit 1
+fi
+
+if [[ "$pcap_args_val" == *"-w "*  ]]; then
+    topics=""
+    echo "Illegal: specify pcap output filename inside pcap_name, not inside the pcap_args"
+    exit 1
+fi
+
 bag_args=$bag_args_val
 
 pcap_args=$pcap_args_val
@@ -134,23 +146,28 @@ if [ "$pcap" -eq 0 ]; then
 
     if [ "$pcap_permission_granted" -eq 0 ]; then
         # important!!! keep tcpdump start before bag record, because of sudo not starting tcpdump until password is given
+        # create a dummy process to get its pid
         tail -f /dev/null &
-        pid_tail=$!
-
-        id_pcap="tcpdump""$pid_tail""$EPOCHREALTIME"
-
-        sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> pcap.log"
-
-        pids=($(pgrep -f "^$id_pcap"))
-
-        kill $pid_tail > /dev/null
-
+        # pid of the created process needed to create a random unique number 
+        unique_number=$!
+        # the unique name of the tcpdump process
+            id_pcap="tcpdump""$unique_number""$EPOCHREALTIME"
+        # to give a custom name to a process exec will be used
+        # exec is a shell built-in so its not a executable
+        # sudo can be used with executables only
+        # so a bash is created with sudo to run the exec command to give a unique custom name to the tcpdump process
+            sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> pcap.log"
+        # array of pids of found processes with that unique name
+            pids=($(pgrep -f "^$id_pcap"))
+        # the dummy process is no longer needed
+            kill $unique_number > /dev/null
+        # check if there isn't only one occurrence
         pids_size=${#pids[@]}
         if [ "$pids_size" -eq 0 ]; then
-            echo "error: no proccesss found"
+            echo "error: pcap did not started, maybe pcap got bad arguments, see pcap.log"
             exit
         elif [ "$pids_size" -gt 1 ]; then
-            echo "error: to many proccess"
+            echo "error: to many processes, cannot find pcap process, more processes have the same name"
             exit
         fi
         pid_pcap=${pids[0]}
@@ -171,13 +188,21 @@ fi
 trap stop_record INT
 
 ## CHECK IF AT LEAST ONE PROCESS HAS STOPPED EXECUTING AND CHECK ITS EXIT CODE. TERMINATE THE OTHER IF NECESSARY.
-tail --pid $pid_pcap -f /dev/null &
+if [ "$pcap" -eq 0 ]; then
+    tail --pid $pid_pcap -f /dev/null &
+fi
+pid_tail_check_pcap=$!
 wait -n -p exited_pid
 
 status=$?
 
-echo "error: proccess with pid $exited_pid terminated unexpectedly";
-if [ "$pcap" -eq 0 ] && [ "$pid_pcap" = "$exited_pid" ] && [ "$pcap_permission_granted" -eq 0 ]; then
+if [ "$pcap" -eq 0 ] && [ "$pid_tail_check_pcap" = "$exited_pid" ] && [ "$pcap_permission_granted" -eq 0 ]; then
+    if ps -p $pid_pcap > /dev/null; then
+        echo "error: process that was checking for pcap process existence unexpectedly terminated"
+        sudo kill $pid_pcap
+    else
+        echo "pcap terminated unexpectedly"
+    fi
     if [ ! "$status" -eq 0 ]; then
         echo "error: pcap terminated with code $status"
     fi
@@ -188,11 +213,12 @@ if [ "$pcap" -eq 0 ] && [ "$pid_pcap" = "$exited_pid" ] && [ "$pcap_permission_g
 fi
 
 if [ "$bag" -eq 0 ] && [ "$pid_bag" = "$exited_pid" ]; then
+    echo "bag terminated unexpectedly"
     if [ ! "$status" -eq 0 ]; then
         echo "error: bag record terminated with code $status"
     fi
 
     if [ "$pcap" -eq 0 ]; then
-        kill $pid_pcap
+        sudo kill $pid_pcap
     fi
 fi
