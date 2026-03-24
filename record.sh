@@ -172,7 +172,9 @@ fi
 trap stop_record INT
 
 ## CHECK IF AT LEAST ONE PROCESS HAS STOPPED EXECUTING AND CHECK ITS EXIT CODE. TERMINATE THE OTHER IF NECESSARY.
-tail --pid $pid_pcap -f /dev/null &
+if [ "$pcap" -eq 0 ]; then
+    tail --pid $pid_pcap -f /dev/null &
+fi
 pid_tail_check_pcap=$!
 wait -n -p exited_pid
 
