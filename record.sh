@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # COMMAND LINE PARSING
 if [ $# -ne 1 ]; then
     echo "ERROR: wrong number of arguments"
@@ -41,7 +43,7 @@ stop_record(){
     fi
     echo
 
-    if [ "$pcap" -eq 0 ] && sudo kill $pid_pcap > /dev/null 2>&1; then
+    if [ "$pcap" -eq 0 ] && [ "$pcap_permission_granted" -eq 0 ] && sudo kill $pid_pcap > /dev/null 2>&1; then
         echo "pcap stopped"
     elif [ "$pcap" -ne 0 ]; then
         echo "pcap recording not started"
@@ -88,11 +90,11 @@ bag_args=$bag_args_val
 pcap_args=$pcap_args_val
 
 ## DEBUG
-# echo \""$pcap_val"\" $pcap
-# echo \""$bag_val"\" $bag
-# echo \""$bag_args_val"\"
-# echo \""$topics_val"\"
-# echo \""$pcap_args_val"\"
+echo \""$pcap_val"\" $pcap
+echo \""$bag_val"\" $bag
+echo \""$bag_args_val"\"
+echo \""$topics_val"\"
+echo \""$pcap_args_val"\"
 
 
 ## PROCESSING OUTPUT FILE NAMES
@@ -114,34 +116,48 @@ else
     bag_ofile_name_arg="-o ""$bag_ofile_name"
 fi
 
+## CHECK AND DISPLAY DISK SPACE
+echo
+echo "Disk space:"
+echo "$(df -h)"
+echo
+
 ## ROSBAG AND TCPDUMP PID
 pid_bag=""
 pid_pcap=""
+pcap_permission_granted=0
 
 if [ "$pcap" -eq 0 ]; then
-    # important!!! keep tcpdump start before bag record, because of sudo not starting tcpdump until password is given
-    tail -f /dev/null &
-    pid_tail=$!
+    # ASKING PERMISSION TO KEEP RECORDING THE PCAP FILE. ONLY NEEDED AFTER DISK SPACE CHECK AND IF PCAP: TRUE IN YAML FILE.
+    
+    read -p "Continue? [Y/N]: " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] || $confirm == [sS] || $confirm == [sS][iI] ]] || pcap_permission_granted=1
 
-    id_pcap="tcpdump""$pid_tail""$EPOCHREALTIME"
+    if [ "$pcap_permission_granted" -eq 0 ]; then
+        # important!!! keep tcpdump start before bag record, because of sudo not starting tcpdump until password is given
+        tail -f /dev/null &
+        pid_tail=$!
 
-    sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> pcap.log"
+        id_pcap="tcpdump""$pid_tail""$EPOCHREALTIME"
 
-    pids=($(pgrep -f "^$id_pcap"))
+        sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> pcap.log"
 
-    kill $pid_tail > /dev/null
+        pids=($(pgrep -f "^$id_pcap"))
 
-    pids_size=${#pids[@]}
-    if [ "$pids_size" -eq 0 ]; then
-        echo "error: no proccesss found"
-        exit
-    elif [ "$pids_size" -gt 1 ]; then
-        echo "error: to many proccess"
-        exit
+        kill $pid_tail > /dev/null
+
+        pids_size=${#pids[@]}
+        if [ "$pids_size" -eq 0 ]; then
+            echo "error: no proccesss found"
+            exit
+        elif [ "$pids_size" -gt 1 ]; then
+            echo "error: to many proccess"
+            exit
+        fi
+        pid_pcap=${pids[0]}
+
+        echo pcap started with pid "$pid_pcap"
     fi
-    pid_pcap=${pids[0]}
-
-    echo pcap started with pid "$pid_pcap"
+    
 fi
 
 if [ "$bag" -eq 0 ]; then 
@@ -161,7 +177,7 @@ wait -n -p exited_pid
 status=$?
 
 echo "error: proccess with pid $exited_pid terminated unexpectedly";
-if [ "$pcap" -eq 0 ] && [ "$pid_pcap" = "$exited_pid" ]; then
+if [ "$pcap" -eq 0 ] && [ "$pid_pcap" = "$exited_pid" ] && [ "$pcap_permission_granted" -eq 0 ]; then
     if [ ! "$status" -eq 0 ]; then
         echo "error: pcap terminated with code $status"
     fi
