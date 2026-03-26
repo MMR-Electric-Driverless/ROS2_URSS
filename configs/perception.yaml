@@ -1,0 +1,15 @@
+pcap: true
+
+bag: true
+
+bag_args: 
+
+topics: /tf /tf_static /lidar_points /clusters /filtered_points /segmented_points
+
+pcap_args: 
+
+pcap_name: tcpdump_ID.pcap
+
+bag_name: rosbag_ID
+
+date_format: "%Y_%m_%d-%H_%M_%S"

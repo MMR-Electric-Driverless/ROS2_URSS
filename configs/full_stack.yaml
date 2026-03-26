@@ -1,0 +1,16 @@
+pcap: true
+
+bag: true
+
+bag_args: 
+
+                        # xsens             # lidar                 # perception # fast_limo    # ekf                           # local_planner                                                                                                                                           # as_drive
+topics: /tf /tf_static /imu/data /odometry /lidar_imu /lidar_points /clusters /fast_limo/state /Odometry /slam/cones_positions /planning/center_line /planning/visualization_triangulation /planning/center_line_completed /planning/race_status /planning/brake_line /planning/end_line /as/status /mission/selected  
+
+pcap_args: 
+
+pcap_name: tcpdump_ID.pcap
+
+bag_name: rosbag_ID
+
+date_format: "%Y_%m_%d-%H_%M_%S"
