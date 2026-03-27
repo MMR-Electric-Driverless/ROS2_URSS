@@ -1,34 +1,224 @@
-$presete_filename="record.preset"
-# leggi il file preset
+#!/bin/bash
 
-# salva nelle variabili i contenuti del file
+# COMMAND LINE PARSING
+if [ $# -ne 1 ]; then
+    echo "error: wrong number of arguments"
+    exit
+fi
+if [ ! -f $1 ]; then
+    echo "file named '$1' not found"
+    exit
+fi
+preset_filename="$1"
+
+# Yaml read function, gently borrowed by the following repository: https://github.com/PigneInTesta/yaml-parser . The main changes involve the formatting of
+# the parsed values, which now are not color coded.
+yaml_read(){
+    result1=$(awk -F ": " -v key="${2}" '{sub(/#.*/, "", $2); gsub(/^[ \t]+|[ \t]+$/, "", $2)} $1 == key {gsub(/"/, "", $2); print $2}' "${1}")
+    count1=$(awk -v key="^${2}:" '$0 ~ key {count++} END {if (count) print count; else print 0}' "${1}")
+    if [ "${count1}" -gt 1 ]; then
+      echo ""
+    elif [ -z "${result1}" ]; then
+      echo ""
+    else
+      echo "${result1}"
+    fi
+}
+
+parse_yaml(){
+    val=$(yaml_read ${preset_filename} "$1")
+    echo "$val"
+}
+
+stop_record(){
+    echo ""
+    echo "stopping recording..."
+    echo
+    if [ "$bag" -eq 0 ] && kill $pid_bag > /dev/null 2>&1; then
+        echo "bag stopped"
+    elif [ "$bag" -ne 0 ]; then
+        echo "bag recording not started"
+    else
+        echo "bag proccess not found"
+    fi
+    echo
+
+    if [ "$pcap" -eq 0 ] && [ "$pcap_permission_granted" -eq 0 ] && sudo kill $pid_pcap > /dev/null 2>&1; then
+        echo "pcap stopped"
+    elif [ "$pcap" -ne 0 ]; then
+        echo "pcap recording not started"
+    else
+        echo "pcap proccess not found"
+    fi
+    echo
+    exit
+}
+
+## RECORD YAML PARSING
+pcap_val=$(parse_yaml "pcap")
+bag_val=$(parse_yaml "bag")
+bag_args_val=$(parse_yaml "bag_args")
+topics_val=$(parse_yaml "topics")
+pcap_args_val=$(parse_yaml "pcap_args")
+pcap_ofile_name_raw=$(parse_yaml "pcap_name")
+bag_ofile_name_raw=$(parse_yaml "bag_name")
+date_format=$(parse_yaml "date_format")
+
+pcap=1
+if [ "$pcap_val" = "true" ]; then
+    pcap=0
+fi
 
 
-# VARIABILI
-# variabile bool che decide se il pcap verrà registrato
-$pcap
-# variabile bool che decide se la bag verrà registrata
-$bag
-# variabile stringa che conteiene e parametri da dare al comando della bag
-$bag_args
-# variabile stringa che conteiene e parametri da dare al comando del pcap
-$pcap_args
-#
-$topics
+bag=1
+if [ "$bag_val" = "true" ]; then
+    bag=0
+fi
+
+topics="topics "$topics_val
+if [ "$topics_val" = "" ]; then
+    topics=""
+fi
+if [[ "$bag_args_val" == *"topics"*  ]]; then
+    topics=""
+    echo "Illegal: specify topic list inside topics, not inside the bag_args"
+    exit 1
+fi
+
+if [[ "$bag_args_val" == *"-o "*  ]]; then
+    topics=""
+    echo "Illegal: specify bag output filename inside bag_name, not inside the bag_args"
+    exit 1
+fi
+
+if [[ "$pcap_args_val" == *"-w "*  ]]; then
+    topics=""
+    echo "Illegal: specify pcap output filename inside pcap_name, not inside the pcap_args"
+    exit 1
+fi
+
+bag_args=$bag_args_val
+
+pcap_args=$pcap_args_val
+
+## DEBUG
+echo \""$pcap_val"\" $pcap
+echo \""$bag_val"\" $bag
+echo \""$bag_args_val"\"
+echo \""$topics_val"\"
+echo \""$pcap_args_val"\"
 
 
-
-# componi i comandi grazie alle variabili
-# esegui i comandi salvando realativi pid
-
-# tcpdump
-# ros2 bag record $bag_args --topics:$topics
-
-# pid bag
-$pid_bag
-# pid pcap
-$pid_pcap
+## PROCESSING OUTPUT FILE NAMES
+timestamp=$(date -d "today" +"$date_format")
 
 
+if [ "$pcap_ofile_name_raw" = "" ]; then
+    pcap_ofile_name_arg=""
+else
+    pcap_ofile_name=${pcap_ofile_name_raw/TIMESTAMP/$timestamp}
+    pcap_ofile_name_arg="-w ""$pcap_ofile_name"
+fi
 
-# se viene premuto ctrl+c ferma le registrazioni
+
+if [  "$bag_ofile_name_raw" = "" ]; then
+    bag_ofile_name_arg=""
+else
+    bag_ofile_name=${bag_ofile_name_raw/TIMESTAMP/$timestamp}
+    bag_ofile_name_arg="-o ""$bag_ofile_name"
+fi
+
+## CHECK AND DISPLAY DISK SPACE
+echo
+echo "Disk space:"
+echo "$(df -h)"
+echo
+
+## ROSBAG AND TCPDUMP PID
+pid_bag=""
+pid_pcap=""
+pcap_permission_granted=0
+
+if [ "$pcap" -eq 0 ]; then
+    # ASKING PERMISSION TO KEEP RECORDING THE PCAP FILE. ONLY NEEDED AFTER DISK SPACE CHECK AND IF PCAP: TRUE IN YAML FILE.
+    
+    read -p "Continue? [Y/N]: " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] || $confirm == [sS] || $confirm == [sS][iI] ]] || pcap_permission_granted=1
+
+    if [ "$pcap_permission_granted" -eq 0 ]; then
+        # important!!! keep tcpdump start before bag record, because of sudo not starting tcpdump until password is given
+        # create a dummy process to get its pid
+        tail -f /dev/null &
+        # pid of the created process needed to create a random unique number 
+        unique_number=$!
+        # the unique name of the tcpdump process
+            id_pcap="tcpdump""$unique_number""$EPOCHREALTIME"
+        # to give a custom name to a process exec will be used
+        # exec is a shell built-in so its not a executable
+        # sudo can be used with executables only
+        # so a bash is created with sudo to run the exec command to give a unique custom name to the tcpdump process
+            sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> pcap.log"
+        # array of pids of found processes with that unique name
+            pids=($(pgrep -f "^$id_pcap"))
+        # the dummy process is no longer needed
+            kill $unique_number > /dev/null
+        # check if there isn't only one occurrence
+        pids_size=${#pids[@]}
+        if [ "$pids_size" -eq 0 ]; then
+            echo "error: pcap did not started, maybe pcap got bad arguments, see pcap.log"
+            exit
+        elif [ "$pids_size" -gt 1 ]; then
+            echo "error: to many processes, cannot find pcap process, more processes have the same name"
+            exit
+        fi
+        pid_pcap=${pids[0]}
+
+        echo pcap started with pid "$pid_pcap"
+    fi
+    
+fi
+
+if [ "$bag" -eq 0 ]; then 
+    ros2 bag record $bag_args $topics $bag_ofile_name_arg > bag.log 2>&1 &
+    pid_bag=$! 
+    echo bag started with pid "$pid_bag"
+fi
+
+## ROSBAG AND TCPDUMP PROCESSES KILLS
+
+trap stop_record INT
+
+## CHECK IF AT LEAST ONE PROCESS HAS STOPPED EXECUTING AND CHECK ITS EXIT CODE. TERMINATE THE OTHER IF NECESSARY.
+if [ "$pcap" -eq 0 ] && [ "$pcap_permission_granted" -eq 0 ]; then
+    tail --pid $pid_pcap -f /dev/null &
+fi
+pid_tail_check_pcap=$!
+wait -n -p exited_pid
+
+status=$?
+
+if [ "$pcap" -eq 0 ] && [ "$pid_tail_check_pcap" = "$exited_pid" ] && [ "$pcap_permission_granted" -eq 0 ]; then
+    if ps -p $pid_pcap > /dev/null; then
+        echo "error: process that was checking for pcap process existence unexpectedly terminated"
+        sudo kill $pid_pcap
+    else
+        echo "pcap terminated unexpectedly"
+    fi
+    if [ ! "$status" -eq 0 ]; then
+        echo "error: pcap terminated with code $status"
+    fi
+
+    if [ "$bag" -eq 0 ]; then
+        kill $pid_bag
+    fi
+fi
+
+if [ "$bag" -eq 0 ] && [ "$pid_bag" = "$exited_pid" ]; then
+    echo "bag terminated unexpectedly"
+    if [ ! "$status" -eq 0 ]; then
+        echo "error: bag record terminated with code $status"
+    fi
+
+    if [ "$pcap" -eq 0 ]; then
+        sudo kill $pid_pcap
+    fi
+fi
