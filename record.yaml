@@ -12,7 +12,7 @@ topics: /imu/data /lidar_imu
 
 pcap_args: 
 
-pcap_name: tcpdump_TIMESTAMP.pcap
+pcap_name: tcpdump_TIMESTAMP
 
 bag_name: rosbag_TIMESTAMP
 

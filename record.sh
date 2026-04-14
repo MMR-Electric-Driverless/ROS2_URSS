@@ -144,6 +144,23 @@ if [[ ! -d "$pcap_dir" ]]; then
 fi
 
 ## PROCESSING OUTPUT FILE NAMES
+bag_max_id=$(find "$bag_dir" -maxdepth 1 -type d -regex ".*_[0-9]+" -printf "%f\n" | sed -E 's/.*_([0-9]+)/\1/' | sort -r | head -n 1)
+pcap_max_id=$(find "$pcap_dir" -maxdepth 1 -regex ".*_[0-9]+\.pcap" -printf "%f\n" | sed -E 's/.*_([0-9]+).*/\1/' | sort -r | head -n 1)
+
+next_id=0
+[ "$bag_max_id" = "" ] && [ ! "$pcap_max_id" = "" ] && next_id=$pcap_max_id
+[ ! "$bag_max_id" = "" ] && [ "$pcap_max_id" = "" ] && next_id=$bag_max_id
+
+if [ ! "$pcap_max_id" = "" ] && [ ! "$bag_max_id" = "" ]; then
+    if [ "$pcap_max_id" -gt "$bag_max_id" ]; then
+        next_id=$pcap_max_id
+    else
+        next_id=$bag_max_id
+    fi
+fi
+
+next_id=$((next_id + 1))
+
 timestamp=$(date -d "today" +"$date_format")
 
 
@@ -151,7 +168,7 @@ if [ "$pcap_ofile_name_raw" = "" ]; then
     pcap_ofile_name_arg=""
 else
     pcap_ofile_name=${pcap_ofile_name_raw/TIMESTAMP/$timestamp}
-    pcap_full_path="$pcap_dir/$pcap_ofile_name"
+    pcap_full_path="$pcap_dir/$pcap_ofile_name""_$next_id"".pcap"
     pcap_ofile_name_arg="-w ""$pcap_full_path"
 fi
 
@@ -160,7 +177,7 @@ if [  "$bag_ofile_name_raw" = "" ]; then
     bag_ofile_name_arg=""
 else
     bag_ofile_name=${bag_ofile_name_raw/TIMESTAMP/$timestamp}
-    bag_full_path="$bag_dir/$bag_ofile_name"
+    bag_full_path="$bag_dir/$bag_ofile_name""_$next_id"
     bag_ofile_name_arg="-o ""$bag_full_path"
 fi
 
