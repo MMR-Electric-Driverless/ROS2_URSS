@@ -57,30 +57,25 @@ stop_record(){
 ## RECORD YAML PARSING
 pcap_val=$(parse_yaml "pcap")
 bag_val=$(parse_yaml "bag")
-bag_dir=$(parse_yaml "bag_dir")
-pcap_dir=$(parse_yaml "pcap_dir")
+bag_dir_val=$(parse_yaml "bag_dir")
+pcap_dir_val=$(parse_yaml "pcap_dir")
 bag_args_val=$(parse_yaml "bag_args")
 topics_val=$(parse_yaml "topics")
 pcap_args_val=$(parse_yaml "pcap_args")
 pcap_ofile_name_raw=$(parse_yaml "pcap_name")
 bag_ofile_name_raw=$(parse_yaml "bag_name")
 date_format=$(parse_yaml "date_format")
+enable_ids_val=$(parse_yaml "enable_ids")
 
 pcap=1
-if [ "$pcap_val" = "true" ]; then
-    pcap=0
-fi
-
-
 bag=1
-if [ "$bag_val" = "true" ]; then
-    bag=0
-fi
-
+enable_ids=1
 topics="topics "$topics_val
-if [ "$topics_val" = "" ]; then
-    topics=""
-fi
+[ "$pcap_val" = "true" ] && pcap=0
+[ "$bag_val" = "true" ] && bag=0
+[ "$enable_ids_val" = "true" ] && enable_ids=0
+[ "$topics_val" = "" ] && topics=""
+
 if [[ "$bag_args_val" == *"topics"*  ]]; then
     topics=""
     echo "Illegal: specify topic list inside topics, not inside the bag_args"
@@ -102,6 +97,10 @@ fi
 bag_args=$bag_args_val
 
 pcap_args=$pcap_args_val
+
+bag_dir=$bag_dir_val
+
+pcap_dir=$pcap_dir_val
 
 ## DEBUG
 echo \""$pcap_val"\" $pcap
@@ -144,22 +143,24 @@ if [[ ! -d "$pcap_dir" ]]; then
 fi
 
 ## PROCESSING OUTPUT FILE NAMES
-bag_max_id=$(find "$bag_dir" -maxdepth 1 -type d -regex ".*_[0-9]+" -printf "%f\n" | sed -E 's/.*_([0-9]+)/\1/' | sort -r | head -n 1)
-pcap_max_id=$(find "$pcap_dir" -maxdepth 1 -regex ".*_[0-9]+\.pcap" -printf "%f\n" | sed -E 's/.*_([0-9]+).*/\1/' | sort -r | head -n 1)
+if [ $enable_ids -eq 0 ]; then
+    bag_max_id=$(find "$bag_dir" -maxdepth 1 -type d -regex ".*_[0-9]+" -printf "%f\n" | sed -E 's/.*_([0-9]+)/\1/' | sort -r | head -n 1)
+    pcap_max_id=$(find "$pcap_dir" -maxdepth 1 -regex ".*_[0-9]+\.pcap" -printf "%f\n" | sed -E 's/.*_([0-9]+).*/\1/' | sort -r | head -n 1)
 
-next_id=0
-[ "$bag_max_id" = "" ] && [ ! "$pcap_max_id" = "" ] && next_id=$pcap_max_id
-[ ! "$bag_max_id" = "" ] && [ "$pcap_max_id" = "" ] && next_id=$bag_max_id
+    next_id=0
+    [ "$bag_max_id" = "" ] && [ ! "$pcap_max_id" = "" ] && next_id=$pcap_max_id
+    [ ! "$bag_max_id" = "" ] && [ "$pcap_max_id" = "" ] && next_id=$bag_max_id
 
-if [ ! "$pcap_max_id" = "" ] && [ ! "$bag_max_id" = "" ]; then
-    if [ "$pcap_max_id" -gt "$bag_max_id" ]; then
-        next_id=$pcap_max_id
-    else
-        next_id=$bag_max_id
+    if [ ! "$pcap_max_id" = "" ] && [ ! "$bag_max_id" = "" ]; then
+        if [ "$pcap_max_id" -gt "$bag_max_id" ]; then
+            next_id=$pcap_max_id
+        else
+            next_id=$bag_max_id
+        fi
     fi
-fi
 
-next_id=$((next_id + 1))
+    next_id=$((next_id + 1))
+fi
 
 timestamp=$(date -d "today" +"$date_format")
 
