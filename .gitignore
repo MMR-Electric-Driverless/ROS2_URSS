@@ -1,4 +1,3 @@
-recordings/bag/*
+recordings/*
 !recordings/bag/.gitkeep
-recordings/pcap/*
 !recordings/pcap/.gitkeep
