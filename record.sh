@@ -11,7 +11,7 @@ if [ ! -f $1 ]; then
 fi
 preset_filename="$1"
 
-# Yaml read function, gently borrowed by the following repository: https://github.com/PigneInTesta/yaml-parser . The main changes involve the formatting of
+# Yaml read function, gently borrowed from the following repository: https://github.com/PigneInTesta/yaml-parser . The main changes involve the formatting of
 # the parsed values, which now are not color coded.
 yaml_read(){
     result1=$(awk -F ": " -v key="${2}" '{sub(/#.*/, "", $2); gsub(/^[ \t]+|[ \t]+$/, "", $2)} $1 == key {gsub(/"/, "", $2); print $2}' "${1}")
