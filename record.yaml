@@ -2,6 +2,10 @@ pcap: true
 
 bag: true
 
+bag_dir: bag_rec
+
+pcap_dir: pcap_rec
+
 bag_args: 
 
 topics: /imu/data /lidar_imu

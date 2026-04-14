@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# DEFINE PATHS
-bag_dir="./recordings/bag"
-pacp_dir="./recordings/pcap"
-
 # COMMAND LINE PARSING
 if [ $# -ne 1 ]; then
     echo "error: wrong number of arguments"
@@ -61,6 +57,8 @@ stop_record(){
 ## RECORD YAML PARSING
 pcap_val=$(parse_yaml "pcap")
 bag_val=$(parse_yaml "bag")
+bag_dir=$(parse_yaml "bag_dir")
+pcap_dir=$(parse_yaml "pcap_dir")
 bag_args_val=$(parse_yaml "bag_args")
 topics_val=$(parse_yaml "topics")
 pcap_args_val=$(parse_yaml "pcap_args")
@@ -108,10 +106,42 @@ pcap_args=$pcap_args_val
 ## DEBUG
 echo \""$pcap_val"\" $pcap
 echo \""$bag_val"\" $bag
+echo \""$bag_dir"\"
+echo \""$pcap_dir"\"
 echo \""$bag_args_val"\"
 echo \""$topics_val"\"
 echo \""$pcap_args_val"\"
 
+## BAG AND PCAP DIRS INTEGRITY CHECKS
+case $bag_dir in
+    */);;
+    *) bag_dir="$bag_dir/"
+        ;;
+esac
+
+case $pcap_dir in
+    */);;
+    *) pcap_dir="$pcap_dir/"
+        ;;
+esac
+
+if [[ ! -d "$bag_dir" ]]; then
+    if [ "$(mkdir -p "$bag_dir")" ]; then
+        echo "Error: unable to create \"$bag_dir\""
+        exit
+    else
+        echo "Info: \"$bag_dir\" created as it didn't exist"
+    fi
+fi
+
+if [[ ! -d "$pcap_dir" ]]; then
+    if [ "$(mkdir -p "$pcap_dir")" ]; then
+        echo "Error: unable to create \"$pcap_dir\""
+        exit
+    else
+        echo "Info: \"$pcap_dir\" created as it didn't exist"
+    fi
+fi
 
 ## PROCESSING OUTPUT FILE NAMES
 timestamp=$(date -d "today" +"$date_format")
