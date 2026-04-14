@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# DEFINE PATHS
+bag_dir="./recordings/bag"
+pacp_dir="./recordings/pcap"
+
 # COMMAND LINE PARSING
 if [ $# -ne 1 ]; then
     echo "error: wrong number of arguments"
