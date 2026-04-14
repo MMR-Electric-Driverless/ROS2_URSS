@@ -2,9 +2,9 @@ pcap: true
 
 bag: true
 
-bag_dir: bag_rec
+bag_dir: ./recordings/bag
 
-pcap_dir: pcap_rec
+pcap_dir: ./recordings/pcap
 
 bag_args: 
 

@@ -151,7 +151,8 @@ if [ "$pcap_ofile_name_raw" = "" ]; then
     pcap_ofile_name_arg=""
 else
     pcap_ofile_name=${pcap_ofile_name_raw/TIMESTAMP/$timestamp}
-    pcap_ofile_name_arg="-w ""$pcap_ofile_name"
+    pcap_full_path="$pcap_dir/$pcap_ofile_name"
+    pcap_ofile_name_arg="-w ""$pcap_full_path"
 fi
 
 
@@ -159,7 +160,8 @@ if [  "$bag_ofile_name_raw" = "" ]; then
     bag_ofile_name_arg=""
 else
     bag_ofile_name=${bag_ofile_name_raw/TIMESTAMP/$timestamp}
-    bag_ofile_name_arg="-o ""$bag_ofile_name"
+    bag_full_path="$bag_dir/$bag_ofile_name"
+    bag_ofile_name_arg="-o ""$bag_full_path"
 fi
 
 ## CHECK AND DISPLAY DISK SPACE
@@ -190,7 +192,7 @@ if [ "$pcap" -eq 0 ]; then
         # exec is a shell built-in so its not a executable
         # sudo can be used with executables only
         # so a bash is created with sudo to run the exec command to give a unique custom name to the tcpdump process
-            sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> pcap.log"
+            sudo -b bash -c "exec -a $id_pcap tcpdump $pcap_args $pcap_ofile_name_arg < /dev/null &> \"${pcap_full_path}.log\""
         # array of pids of found processes with that unique name
             pids=($(pgrep -f "^$id_pcap"))
         # the dummy process is no longer needed
@@ -212,7 +214,7 @@ if [ "$pcap" -eq 0 ]; then
 fi
 
 if [ "$bag" -eq 0 ]; then 
-    ros2 bag record $bag_args $topics $bag_ofile_name_arg > bag.log 2>&1 &
+    ros2 bag record $bag_args $topics $bag_ofile_name_arg > "${bag_full_path}.log" 2>&1 &
     pid_bag=$! 
     echo bag started with pid "$pid_bag"
 fi
