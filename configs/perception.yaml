@@ -1,0 +1,15 @@
+pcap: true
+
+bag: true
+
+bag_args: --qos-profile-overrides-path /home/orin/orin_ws/src/orin-drive/src/0_common/ros2-record-sh/configs/qos_profiles.yaml
+
+topics: /tf /tf_static /lidar_points /clusters /filtered_points /segmented_points
+
+pcap_args: 
+
+pcap_name: tcpdump_ID.pcap
+
+bag_name: rosbag_ID
+
+date_format: "%Y_%m_%d-%H_%M_%S"

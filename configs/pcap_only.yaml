@@ -1,0 +1,15 @@
+pcap: true
+
+bag: false
+
+bag_args: 
+
+topics: 
+
+pcap_args: 
+
+pcap_name: tcpdump_ID.pcap
+
+bag_name:
+
+date_format: "%Y_%m_%d-%H_%M_%S"
