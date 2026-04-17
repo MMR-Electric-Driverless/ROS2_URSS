@@ -2,6 +2,10 @@ pcap: true
 
 bag: true
 
+bag_dir: ./recordings/bag
+
+pcap_dir: ./recordings/pcap
+
 bag_args: --qos-profile-overrides-path /home/orin/orin_ws/src/orin-drive/src/0_common/ros2-record-sh/configs/qos_profiles.yaml
 
                         # xsens             # lidar                 # perception # fast_limo    # ekf                           # local_planner                                                                                                                                         
@@ -9,8 +13,10 @@ topics: /tf /tf_static /imu/data /odometry /lidar_imu /lidar_points /clusters /f
 
 pcap_args: 
 
-pcap_name: tcpdump_ID.pcap
+pcap_name: tcpdump.pcap   # tcpdump_TIMESTAMP.pcap
 
-bag_name: rosbag_ID
+bag_name: rosbag    # rosbag_TIMESTAMP
 
 date_format: "%Y_%m_%d-%H_%M_%S"
+
+enable_ids: true
