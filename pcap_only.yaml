@@ -10,7 +10,7 @@ bag_args:
 
 topics: 
 
-pcap_args: 
+pcap_args: -i eth0 -s 0 udp and port 2368
 
 pcap_name: tcpdump.pcap   # tcpdump_TIMESTAMP.pcap
 
