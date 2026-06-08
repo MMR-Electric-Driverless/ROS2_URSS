@@ -1,3 +1,5 @@
+# not only anymore, but ok
+
 pcap: false
 
 bag: true
@@ -8,7 +10,7 @@ pcap_dir: ./recordings/pcap
 
 bag_args: 
 
-topics: /tf /tf_static /fast_limo/body /fast_limo/deskewed /fast_limo/final_raw /fast_limo/match /fast_limo/match_points /fast_limo/original /fast_limo/pointcloud /fast_limo/state
+topics: /tf /tf_static /fast_limo/body /fast_limo/deskewed /fast_limo/final_raw /fast_limo/match /fast_limo/match_points /fast_limo/original /fast_limo/pointcloud /fast_limo/state /tf /tf_static /imu/data /odometry /lidar_imu /lidar_points /emlid/gps/data /emlid/gps/speed /emlid/navsatfix /clusters /fast_limo/state /Odometry /slam/cones_positions /planning/center_line /planning/visualization_triangulation /planning/center_line_completed /planning/race_status /planning/brake_line /planning/end_line
 
 pcap_args:
 

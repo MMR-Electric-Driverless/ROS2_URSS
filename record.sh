@@ -233,6 +233,8 @@ if [ "$pcap" -eq 0 ]; then
 fi
 
 if [ "$bag" -eq 0 ]; then 
+    source /home/orin/orin_ws/install/setup.bash    # TODO: makeiit a parameter
+    
     ros2 bag record $bag_args $topics $bag_ofile_name_arg > "${bag_full_path}.log" 2>&1 &
     pid_bag=$! 
     echo bag started with pid "$pid_bag"
